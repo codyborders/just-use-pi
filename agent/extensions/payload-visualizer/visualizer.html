@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pi Payload Visualizer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #0d1117;
+    color: #c9d1d9;
+    line-height: 1.5;
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #30363d;
+  }
+  h1 { font-size: 20px; font-weight: 600; color: #f0f6fc; }
+  .subtitle { font-size: 13px; color: #8b949e; margin-top: 2px; }
+  .actions { display: flex; gap: 8px; }
+  button {
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  button:hover { background: #30363d; border-color: #8b949e; }
+  button.primary { background: #238636; border-color: #238636; color: #fff; }
+  button.primary:hover { background: #2ea043; }
+  button.danger { background: #da3633; border-color: #da3633; color: #fff; }
+  button.danger:hover { background: #f85149; }
+  .stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #8b949e;
+  }
+  .stat b { color: #f0f6fc; }
+  .payload-list { display: flex; flex-direction: column; gap: 12px; }
+  .payload-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .payload-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .payload-header:hover { background: #1c2128; }
+  .payload-header-left { display: flex; align-items: center; gap: 12px; }
+  .turn-badge {
+    background: #1f6feb;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    min-width: 42px;
+    text-align: center;
+  }
+  .model-info { display: flex; flex-direction: column; }
+  .model-name { font-size: 14px; font-weight: 500; color: #f0f6fc; }
+  .model-meta { font-size: 12px; color: #8b949e; }
+  .payload-header-right { display: flex; align-items: center; gap: 12px; }
+  .timestamp { font-size: 12px; color: #8b949e; font-family: ui-monospace, SFMono-Regular, monospace; }
+  .expand-icon { font-size: 12px; color: #8b949e; transition: transform 0.2s; }
+  .payload-card.open .expand-icon { transform: rotate(90deg); }
+  .payload-body {
+    display: none;
+    border-top: 1px solid #30363d;
+    padding: 18px;
+  }
+  .payload-card.open .payload-body { display: block; }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #30363d;
+    padding-bottom: 8px;
+  }
+  .tab {
+    background: transparent;
+    border: none;
+    color: #8b949e;
+    padding: 4px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  .tab:hover { color: #c9d1d9; }
+  .tab.active { color: #f0f6fc; background: #21262d; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  pre {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 14px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.6;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  .message {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #161b22;
+    border-bottom: 1px solid #21262d;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .role-user .message-header { color: #58a6ff; }
+  .role-assistant .message-header { color: #a371f7; }
+  .role-system .message-header { color: #3fb950; }
+  .role-tool .message-header { color: #d29922; }
+  .message-body {
+    padding: 12px;
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .tool-call {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 12px;
+  }
+  .tool-call-name {
+    font-weight: 600;
+    color: #d29922;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .tool-call-args {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 12px;
+    background: #0d1117;
+    padding: 8px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8b949e;
+  }
+  .empty-state h2 { font-size: 18px; margin-bottom: 8px; color: #c9d1d9; }
+  .json-key { color: #7ee787; }
+  .json-string { color: #a5d6ff; }
+  .json-number { color: #79c0ff; }
+  .json-boolean { color: #ff7b72; }
+  .json-null { color: #ff7b72; }
+  .copy-btn {
+    float: right;
+    font-size: 11px;
+    padding: 2px 8px;
+    margin-top: -4px;
+  }
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #f0f6fc;
+    margin: 16px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: #30363d;
+    color: #8b949e;
+    margin-left: 8px;
+  }
+  .token-count {
+    font-size: 11px;
+    color: #8b949e;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    background: #21262d;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid #30363d;
+  }
+  .token-total {
+    font-size: 12px;
+    color: #d29922;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-weight: 600;
+  }
+  .polling-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3fb950;
+    margin-left: 8px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>pi Payload Visualizer <span class="polling-indicator"></span></h1>
+    <div class="subtitle">Session-only LLM request payload inspector</div>
+  </div>
+  <div class="actions">
+    <button onclick="refresh()">Refresh</button>
+    <button class="danger" onclick="clearAll()">Clear All</button>
+  </div>
+</header>
+
+<div class="stats" id="stats">
+  <span><b id="count">0</b> payloads captured</span>
+  <span>Server: <b id="server">connecting...</b></span>
+</div>
+
+<div class="payload-list" id="list">
+  <div class="empty-state">
+    <h2>No payloads yet</h2>
+    <p>Capture is enabled for this pi session. Send a prompt to capture your first LLM request payload.</p>
+  </div>
+</div>
+
+<script>
+let payloads = [];
+let pollInterval;
+
+async function fetchPayloads() {
+  try {
+    const res = await fetch('/api/payloads');
+    if (!res.ok) return;
+    const newPayloads = await res.json();
+    if (JSON.stringify(newPayloads) === JSON.stringify(payloads)) return;
+    payloads = newPayloads;
+    document.getElementById('server').textContent = 'connected';
+    render();
+  } catch (e) {
+    document.getElementById('server').textContent = 'disconnected';
+  }
+}
+
+async function clearAll() {
+  if (!confirm('Clear all captured payloads?')) return;
+  try {
+    await fetch('/api/clear', { method: 'POST' });
+    payloads = [];
+    render();
+  } catch (e) {
+    alert('Failed to clear');
+  }
+}
+
+function refresh() { fetchPayloads(); }
+
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  card.classList.toggle('open');
+}
+
+function switchTab(cardId, tabName) {
+  const card = document.getElementById('card-' + cardId);
+  card.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+  card.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.dataset.tab === tabName));
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function estimateTokens(text) {
+  if (!text) return 0;
+  // Rough estimate: ~1 token per 3.5 chars for mixed text/code
+  return Math.ceil(text.length / 3.5);
+}
+
+function formatTokens(n) {
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  return String(n);
+}
+
+function computeTotalTokens(payload, msgs, sys, tools) {
+  let total = 0;
+  // Message contents
+  for (const m of msgs) {
+    total += estimateTokens(m.content);
+    // Role and structural overhead
+    total += 4;
+  }
+  // System prompt
+  if (sys) total += estimateTokens(sys) + 4;
+  // Tools
+  for (const t of tools) {
+    total += estimateTokens(JSON.stringify(t));
+  }
+  // Base overhead per request
+  total += 3;
+  return Math.round(total);
+}
+
+function syntaxHighlight(json) {
+  if (!json) return '';
+  const str = typeof json === 'string' ? json : JSON.stringify(json, null, 2);
+  return escapeHtml(str)
+    .replace(/"(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?=\s*:)/g, '<span class="json-key">$&</span>')
+    .replace(/"(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?!\s*:)/g, '<span class="json-string">$&</span>')
+    .replace(/\b(true|false)\b/g, '<span class="json-boolean">$&</span>')
+    .replace(/\b(null)\b/g, '<span class="json-null">$&</span>')
+    .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="json-number">$&</span>');
+}
+
+function extractMessages(payload) {
+  // OpenAI format
+  if (Array.isArray(payload.messages)) {
+    return payload.messages.map((m, i) => {
+      const role = m.role || 'unknown';
+      let content = '';
+      if (typeof m.content === 'string') content = m.content;
+      else if (Array.isArray(m.content)) {
+        content = m.content.map(c => {
+          if (c.type === 'text') return c.text;
+          if (c.type === 'image') return '[Image]';
+          if (c.type === 'toolCall') return '```tool-call\n' + JSON.stringify(c, null, 2) + '\n```';
+          if (c.type === 'toolResult') return '```tool-result\n' + JSON.stringify(c, null, 2) + '\n```';
+          return JSON.stringify(c);
+        }).join('\n\n');
+      } else content = JSON.stringify(m.content, null, 2);
+      return { role, content, index: i };
+    });
+  }
+  // Anthropic format
+  if (Array.isArray(payload.body?.messages) || Array.isArray(payload.messages)) {
+    const msgs = payload.body?.messages || payload.messages;
+    return msgs.map((m, i) => {
+      const role = m.role || 'unknown';
+      let content = '';
+      if (typeof m.content === 'string') content = m.content;
+      else if (Array.isArray(m.content)) {
+        content = m.content.map(c => {
+          if (c.type === 'text') return c.text;
+          if (c.type === 'image') return '[Image]';
+          if (c.type === 'tool_use') return '```tool-use\n' + JSON.stringify(c, null, 2) + '\n```';
+          if (c.type === 'tool_result') return '```tool-result\n' + JSON.stringify(c, null, 2) + '\n```';
+          return JSON.stringify(c);
+        }).join('\n\n');
+      } else content = JSON.stringify(m.content, null, 2);
+      return { role, content, index: i };
+    });
+  }
+  // Google/Gemini format
+  if (Array.isArray(payload.contents)) {
+    return payload.contents.map((c, i) => {
+      const role = c.role || 'user';
+      let content = '';
+      if (Array.isArray(c.parts)) {
+        content = c.parts.map(p => p.text || JSON.stringify(p)).join('\n\n');
+      } else content = JSON.stringify(c, null, 2);
+      return { role, content, index: i };
+    });
+  }
+  return [];
+}
+
+function extractSystemPrompt(payload) {
+  if (typeof payload.system === 'string') return payload.system;
+  if (Array.isArray(payload.system)) return payload.system.map(s => s.text).join('\n');
+  if (payload.body?.system) {
+    const s = payload.body.system;
+    return typeof s === 'string' ? s : Array.isArray(s) ? s.map(x => x.text).join('\n') : '';
+  }
+  const msgs = extractMessages(payload);
+  const sys = msgs.find(m => m.role === 'system');
+  return sys ? sys.content : '';
+}
+
+function extractTools(payload) {
+  const tools = payload.tools || payload.body?.tools || payload.tool_config || [];
+  if (Array.isArray(tools)) return tools;
+  return [];
+}
+
+function copyJson(id) {
+  const p = payloads.find(x => x.id === id);
+  if (!p) return;
+  navigator.clipboard.writeText(JSON.stringify(p.payload, null, 2));
+}
+
+function render() {
+  document.getElementById('count').textContent = payloads.length;
+  const list = document.getElementById('list');
+
+  // Preserve open state and active tabs across re-renders
+  const openIds = new Set();
+  const activeTabs = {};
+  document.querySelectorAll('.payload-card.open').forEach(card => {
+    const id = card.id.replace('card-', '');
+    openIds.add(id);
+    const activeTab = card.querySelector('.tab.active');
+    if (activeTab) activeTabs[id] = activeTab.dataset.tab;
+  });
+
+  if (payloads.length === 0) {
+    list.innerHTML = '<div class="empty-state"><h2>No payloads yet</h2><p>Capture is enabled for this pi session. Send a prompt to capture your first LLM request payload.</p></div>';
+    return;
+  }
+
+  list.innerHTML = payloads.slice().reverse().map(p => {
+    const isOpen = openIds.has(p.id);
+    const activeTab = activeTabs[p.id] || 'messages';
+    const msgs = extractMessages(p.payload);
+    const sys = extractSystemPrompt(p.payload);
+    const tools = extractTools(p.payload);
+    const date = new Date(p.timestamp);
+    const timeStr = date.toLocaleTimeString();
+    const msgCount = msgs.length;
+    const toolCount = tools.length;
+    const totalTokens = computeTotalTokens(p.payload, msgs, sys, tools);
+
+    return '<div class="payload-card' + (isOpen ? ' open' : '') + '" id="card-' + p.id + '">\
+      <div class="payload-header" onclick="toggleCard(\'' + p.id + '\')">\
+        <div class="payload-header-left">\
+          <span class="turn-badge">Turn ' + p.turnIndex + '</span>\
+          <div class="model-info">\
+            <div class="model-name">' + escapeHtml(p.provider) + ' / ' + escapeHtml(p.model) + '</div>\
+            <div class="model-meta">' + msgCount + ' messages ' + (toolCount > 0 ? '&bull; ' + toolCount + ' tools ' : '') + (p.api ? '&bull; ' + escapeHtml(p.api) : '') + '</div>\
+          </div>\
+        </div>\
+        <div class="payload-header-right">\
+          <span class="token-total" title="Estimated tokens">~' + formatTokens(totalTokens) + ' tok</span>\
+          <span class="timestamp">' + timeStr + '</span>\
+          <span class="expand-icon">&#9654;</span>\
+        </div>\
+      </div>\
+      <div class="payload-body">\
+        <div class="tabs">\
+          <button class="tab' + (activeTab === 'messages' ? ' active' : '') + '" data-tab="messages" onclick="switchTab(\'' + p.id + '\', \'messages\')">Messages</button>\
+          <button class="tab' + (activeTab === 'system' ? ' active' : '') + '" data-tab="system" onclick="switchTab(\'' + p.id + '\', \'system\')">System Prompt</button>\
+          <button class="tab' + (activeTab === 'tools' ? ' active' : '') + '" data-tab="tools" onclick="switchTab(\'' + p.id + '\', \'tools\')">Tools</button>\
+          <button class="tab' + (activeTab === 'raw' ? ' active' : '') + '" data-tab="raw" onclick="switchTab(\'' + p.id + '\', \'raw\')">Raw JSON</button>\
+        </div>\
+        <div class="tab-content' + (activeTab === 'messages' ? ' active' : '') + '" data-tab="messages">\
+          ' + (msgs.length === 0 ? '<p style="color:#8b949e;font-size:13px;">No messages found in this payload.</p>' : msgs.map(m => {
+            const tok = estimateTokens(m.content) + 4;
+            return '\
+            <div class="message role-' + m.role + '">\
+              <div class="message-header">\
+                <span>' + m.role + '</span>\
+                <span><span class="badge">#' + m.index + '</span><span class="token-count" title="Estimated tokens">~' + formatTokens(tok) + ' tok</span></span>\
+              </div>\
+              <div class="message-body">' + escapeHtml(m.content) + '</div>\
+            </div>';
+          }).join('')) + '\
+        </div>\
+        <div class="tab-content' + (activeTab === 'system' ? ' active' : '') + '" data-tab="system">\
+          ' + (sys ? '<div style="margin-bottom:8px;"><span class="token-count" title="Estimated tokens">~' + formatTokens(estimateTokens(sys) + 4) + ' tok</span></div><pre>' + escapeHtml(sys) + '</pre>' : '<p style="color:#8b949e;font-size:13px;">No system prompt found.</p>') + '\
+        </div>\
+        <div class="tab-content' + (activeTab === 'tools' ? ' active' : '') + '" data-tab="tools">\
+          ' + (tools.length === 0 ? '<p style="color:#8b949e;font-size:13px;">No tools in this payload.</p>' : tools.map((t, i) => {
+            const name = t.function?.name || t.name || 'unknown';
+            const desc = t.function?.description || t.description || '';
+            const params = t.function?.parameters || t.parameters || t.input_schema || {};
+            const tok = estimateTokens(JSON.stringify(t));
+            return '<div class="tool-call">\
+              <div class="tool-call-name">' + escapeHtml(String(name)) + ' <span class="token-count" title="Estimated tokens">~' + formatTokens(tok) + ' tok</span></div>\
+              <div style="font-size:12px;color:#8b949e;margin-bottom:8px;">' + escapeHtml(String(desc)) + '</div>\
+              <div class="tool-call-args">' + syntaxHighlight(params) + '</div>\
+            </div>';
+          }).join('')) + '\
+        </div>\
+        <div class="tab-content' + (activeTab === 'raw' ? ' active' : '') + '" data-tab="raw">\
+          <button class="copy-btn" onclick="copyJson(\'' + p.id + '\')">Copy JSON</button>\
+          <pre>' + syntaxHighlight(p.payload) + '</pre>\
+        </div>\
+      </div>\
+    </div>';
+  }).join('');
+}
+
+fetchPayloads();
+pollInterval = setInterval(fetchPayloads, 2000);
+</script>
+</body>
+</html>

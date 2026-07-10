@@ -1,0 +1,23 @@
+{
+  "local-patch": {
+    "provider": "local-qwen",
+    "model": "qwen36-35b-a3b-iq4xs-q8k-turbo3v",
+    "thinkingLevel": "off",
+    "tools": ["read", "bash", "edit", "write", "grep", "find", "ls"],
+    "instructions": "Use the local Qwen worker for short, mechanical coding tasks. Prefer direct patches over discussion. Keep responses terse. If the task needs architectural judgment, ambiguous multi-file debugging, security-sensitive reasoning, or repeated retries, stop and tell the user this should move to the frontier preset. Keep code outputs concise and complete."
+  },
+  "local-diagnose": {
+    "provider": "local-qwen",
+    "model": "qwen36-35b-a3b-iq4xs-q8k-turbo3v",
+    "thinkingLevel": "low",
+    "tools": ["read", "bash", "edit", "write", "grep", "find", "ls"],
+    "instructions": "Use the local Qwen worker for medium-complexity diagnosis and bounded multi-file fixes. Start by naming the likely root cause, then propose the smallest patch. Keep internal reasoning short. If confidence drops below high confidence, or if the task becomes architectural, migration-heavy, concurrency-heavy, or security-sensitive, stop and recommend switching to the frontier preset."
+  },
+  "frontier-hard": {
+    "provider": "minimax",
+    "model": "MiniMax-M2.7-highspeed",
+    "thinkingLevel": "high",
+    "tools": ["read", "bash", "edit", "write", "grep", "find", "ls"],
+    "instructions": "Use the frontier model for ambiguous debugging, architectural decisions, security-sensitive work, long refactors, migrations, and any task where the local worker struggled or needed multiple retries. Spend tokens on correctness, not speed."
+  }
+}

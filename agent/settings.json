@@ -1,0 +1,16 @@
+{
+  "theme": "claude-code",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.6-sol",
+  "defaultThinkingLevel": "xhigh",
+  "quietStartup": true,
+  "packages": [
+    "npm:@sting8k/pi-vcc@0.4.0",
+    "npm:@tomooshi/caveman-milk-pi@0.2.0",
+    "npm:@tomooshi/condensed-milk-pi@1.9.0",
+    "npm:pi-boomerang@0.6.6",
+    "npm:@plannotator/pi-extension@0.22.0",
+    "npm:pi-subagents@0.34.0",
+    "./packages/pi-tdd-guard"
+  ]
+}

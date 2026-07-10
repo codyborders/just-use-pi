@@ -1,0 +1,32 @@
+# Credentials and environment files
+.env
+.env.*
+!.env.example
+agent/auth.json
+agent/mcp.json
+agent/models.json
+agent/models.json.bak
+agent/models.json.router-backup-*
+agent/trust.json
+agent/trust.json.lock
+
+# Sessions, transcripts, and local state
+.entire/
+agent/.claude/
+agent/sessions/
+agent/*.jsonl
+agent/review-gate/
+agent/runtime-archive/
+agent/rtk-metrics.json
+pi-session-manager/
+
+# Installed packages and generated dependencies
+agent/bin/
+agent/git/
+agent/npm/
+agent/packages/*/node_modules/
+
+# Runtime artifacts
+*.log
+*.swp
+.DS_Store
