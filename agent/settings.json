@@ -11,6 +11,7 @@
     "npm:pi-boomerang@0.6.6",
     "npm:@plannotator/pi-extension@0.22.0",
     "npm:pi-subagents@0.34.0",
-    "./packages/pi-tdd-guard"
+    "./packages/pi-tdd-guard",
+    "./packages/pi-frontend-standards"
   ]
 }

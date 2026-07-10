@@ -79,3 +79,5 @@ When I ask you to research or scrape a website, use search tools first. Do not s
 ## Conditional Skills
 
 When work involves Python code, Python tooling, or Python project files, read and follow the `python-practices` skill before changing files.
+
+When work involves frontend code or rendered interface design, read and follow the `frontend-design` skill before changing files. For standards-based review-only work, use `frontend-design-review`.

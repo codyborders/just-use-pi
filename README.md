@@ -2,7 +2,7 @@
 
 An opinionated global configuration for [Pi](https://pi.dev), built around direct execution, code review, test-first changes, and reusable skills.
 
-This repository distributes configuration for Pi. It does not modify Pi source. The `agent/` directory contains global instructions, extensions, skills, presets, package settings, and a local TDD guard package.
+This repository distributes configuration for Pi. It does not modify Pi source. The `agent/` directory contains global instructions, extensions, skills, presets, package settings, and local packages for TDD enforcement and frontend standards.
 
 ## Requirements
 
@@ -14,7 +14,7 @@ npm install -g --ignore-scripts @earendil-works/pi-coding-agent
 
 ## Setup
 
-Clone the repository and install the local package dependencies:
+Clone the repository and install the TDD guard dependencies. The frontend standards package has no runtime dependencies.
 
 ```bash
 git clone https://github.com/codyborders/just-use-pi.git
@@ -41,6 +41,7 @@ Set `PI_CODING_AGENT_DIR` in your shell environment to load this configuration b
 | `agent/extensions/` | Tools and workflow controls |
 | `agent/skills/` | Reusable task and review instructions |
 | `agent/packages/pi-tdd-guard/` | Test-first enforcement for behavior-bearing code |
+| `agent/packages/pi-frontend-standards/` | Frontend implementation guidance, visual review, prompts, and shared standards |
 | `agent/presets.json` | Reusable model and tool presets |
 | `agent/models.json.example` | Credential-free custom model example |
 
@@ -67,6 +68,8 @@ Run the package checks after changing the TDD guard:
 ```bash
 npm run check --prefix agent/packages/pi-tdd-guard
 ```
+
+The frontend standards package contains skills, prompt templates, and Markdown references. Pi validates those resources when loading the configuration.
 
 See [SECURITY.md](SECURITY.md) for private vulnerability reporting and repository security boundaries.
 

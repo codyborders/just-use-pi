@@ -20,6 +20,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 `agent/packages/pi-tdd-guard/THIRD_PARTY_NOTICES.md` records the attribution and license for material adapted by that package.
 
+## Frontend Agent Standards Pack
+
+`agent/packages/pi-frontend-standards/` adapts a frontend standards pack supplied for inclusion by the repository maintainer. The package contains no third-party runtime code or dependencies.
+
 ## External Tools and Libraries
 
 Skills may document or invoke external projects such as Pi, Surf, agent-browser, and DSPy.rb. Those projects are not bundled here. Package dependencies are declared in their respective manifests and retain their upstream licenses.
